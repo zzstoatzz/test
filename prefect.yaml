@@ -1,0 +1,28 @@
+name: test
+prefect-version: 2.14.12
+
+deployments:
+- name: idc
+  entrypoint: foo.py:my_flow
+  work_pool:
+    name: docker-work
+    job_variables:
+      image: '{{ build_image.image }}'
+
+  build:
+  - prefect_docker.deployments.steps.build_docker_image:
+      id: build_image
+      requires: prefect-docker>=0.3.1
+      image_name: zzstoatzz/test
+      tag: test
+      dockerfile: auto
+
+  push:
+  - prefect_docker.deployments.steps.push_docker_image:
+      requires: prefect-docker>=0.3.1
+      image_name: '{{ build_image.image_name }}'
+      tag: '{{ build_image.tag }}'
+
+  pull:
+  - prefect.deployments.steps.set_working_directory:
+      directory: /opt/prefect/test
